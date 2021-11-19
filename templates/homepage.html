@@ -2,20 +2,20 @@
 <html lang="en">
   <head>
   
-
     <title>
-    {% block title %}{% endblock %}
+        Fetch Rewards Homepage
     </title>
     
-    {% block head %} {% endblock %}
-
   </head>
   <body>
   
-   
-    {% block body %}{% endblock %}
+    <form action="/transaction" method="POST" class = "transaction">
+        <input type="text" name = "payer" placeholder="payer">
+        <input type="text" name = "points" placeholder="points">
+        <input type="time" name = "timestamp" placeholder="timestamp">
 
-    {% block after_body %}{% endblock %}
+        <input type="submit" value="transact" name = "transaction_submit">
+    </form>
   
   </body>
 </html>
