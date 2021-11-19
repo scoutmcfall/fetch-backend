@@ -21,16 +21,27 @@ def homepage():
     res = requests.get(url)
 
 
-
 @app.route('/transaction')
-def add_transaction(payer, date):
+def add_transaction(payer, points, timestamp):
     """Add transactions for a specific payer and date."""
 
 @app.route('/spend')
-def spend_points():
-    """● Spend points using the rules above and return a list of 
-    { "payer": <string>, "points": <integer> } for each call."""
+def spend_points(points):
+    """Spend oldest (based on transaction timestamp) points first and return a list of 
+    { "payer": <string>, "points": <integer> } for each call. 
+    No payer's points should be negative.
+    ex:
+    [
+    { "payer": "DANNON", "points": -100 },
+    { "payer": "UNILEVER", "points": -200 },
+    { "payer": "MILLER COORS", "points": -4,700 }
+    ]"""
 
 @app.route('/balances')
 def all_balances():
-    """Return all payer point balances."""
+    """Return all payer point balances.
+    {
+    "DANNON": 1000,
+    "UNILEVER": 0,
+    "MILLER COORS": 5300
+    }"""
