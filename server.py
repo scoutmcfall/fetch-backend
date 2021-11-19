@@ -18,12 +18,15 @@ API_KEY = os.environ["API_KEY"]
 
 @app.route('/')
 def homepage():
-    res = requests.get(url)
+    #should this page have a form to collect transaction inputs?
+    #and a button for each route?
+    return render_template("homepage.html")
 
 
 @app.route('/transaction')
 def add_transaction(payer, points, timestamp):
     """Add transactions for a specific payer and date."""
+    
 
 @app.route('/spend')
 def spend_points(points):
