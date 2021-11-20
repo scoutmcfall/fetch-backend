@@ -1,6 +1,5 @@
 Fetch Rewards Coding Exercise - Backend Software Engineering
-W
-hat do I need to submit?
+What do I need to submit?
 Please write a web service that accepts HTTP requests and returns responses based on the conditions outlined in the next
 section. You can use any language and frameworks you choose.
 We must be able to run your web service; provide any documentation necessary to accomplish this as part of the repository you submit.
