@@ -52,9 +52,6 @@ def homepage():
         points = transaction["points"]
         timestamp = transaction["timestamp"]
         if transaction["points"] > 0:
-            # payer_var = session.get(payer,[])
-            # payer_var.append({"points": points, "timestamp" : timestamp})
-            # session[payer] = payer_var
             ledger = session.get("ledger", [])
             ledger.append((timestamp, points, payer))
             session["ledger"] = ledger
@@ -88,18 +85,10 @@ def add_transaction(payer = "", points = "", timestamp = ""):
             timestamp = transaction["timestamp"]
             ledger = session.get("ledger", [])
             ledger.append((timestamp, points, payer))
-            # session["ledger"] = ledger
     else:
         negs = session.get("negs", [])
         negs.append((timestamp, points, payer))
-        # session["negs"] = negs
-    
-   
-    # payer_var = session.get(payer,[])
-    # payer_var.append((timestamp, points))
-    # session[payer] = payer_var
-
-    # session["ledger"].append((timestamp, points, payer))
+        
    
     return ("", 200)
 
@@ -121,8 +110,7 @@ def spend_points():
     negs = session["negs"]
     ledger = sorted(session["ledger"])
     spend = request.args
-    # if not cost:
-    #     cost = spend
+   
     cost = int(spend.get("points", 0))
 
     for timestamp, points, payer in negs:
@@ -162,6 +150,7 @@ def spend_points():
             ledger.remove(transaction)
             break
 
+    #zero out negs once i've subtracted them all
     session["negs"] = []
     print("************************************")
     print(session["ledger"])
@@ -195,7 +184,7 @@ def spend_points():
     
 
 
-@app.route('/balances', methods=["POST"])
+@app.route('/balances',  methods=["GET"])
 def all_balances():
     """Return all payer point balances. If negative, reset to 0.
     {
@@ -205,9 +194,15 @@ def all_balances():
     }"""
     ledger = session["ledger"]
     balance = {}
-    for timestamp, points, payer in ledger:
-        balance[payer] = session.get(payer, [])
+    for transaction in ledger:
+        payer = transaction[2]
+        points = transaction[1]
+        # balance[payer] = [+=points, 0]
+        balance[payer] = balance.get(payer, points)
     print(balance)
+    # dict.get(key, default = None)
+
+    return("", 200)
 
 
     
