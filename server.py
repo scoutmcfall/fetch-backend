@@ -17,25 +17,6 @@ app.jinja_env.undefined = StrictUndefined
 # API_KEY = os.environ["API_KEY"]
 
 
-
-
-
-
-"""
-each transaction is read in individually and the list of positive transactions is stored in session as ledger
-if it is positive, it's added to the end of ledger (a list of dictionaries)
-if it's negative, it's added to negs (list of dictionaries) which the spend route iterates through, 
-subtracting each from ledger and updating ledger each iteration 
-
-so, session consists of: {ledger: [], negs: [], payer_totals:{}}
-
-in order to return the totals/payer, iterate through the updated ledger and populate a dictionary of {payer:points}
-using .get
-then return that dictionary
-"""
-
-
-
 @app.route('/')
 def homepage():
     """prepopulate session with test data"""
@@ -161,29 +142,6 @@ def spend_points():
     return("", 200)
 
 
-
-    # if cost <= spending_limit:
-    #     remaining_total = spending_limit
-    #     for timestamp, points, payer in ledger:
-    #         if remaining_total == 0:
-    #             break
-    #         else:
-    #             if payer_cost  remaining_total:
-    #                 #delete the item from ledger
-    #             payer_cost = min(remaining_total, points)
-    #             remaining_total -= payer_cost
-    #             # save payer and timestamp inside of list
-                
-    #             # add transaction that subtracts minimum of remaining total and points
-    #             add_transaction(payer = payer, points = -payer_cost, timestamp = str(datetime.now()))
-                
-                
-    # else:
-    #     print("NO!")
-    #clear negs list after processing them all against the ledger
-    
-
-
 @app.route('/balances',  methods=["GET"])
 def all_balances():
     """Return all payer point balances. If negative, reset to 0.
@@ -197,26 +155,15 @@ def all_balances():
     for transaction in ledger:
         payer = transaction[2]
         points = transaction[1]
-        # balance[payer] = [+=points, 0]
         balance[payer] = balance.get(payer, points)
     print(balance)
-    # dict.get(key, default = None)
-
+    session["balance"] = balance
     return("", 200)
 
 
-    
-    # points_dict = {}
-    # for payer in session:
-    #     points_dict[payer] = [session[payer]["points"]]
-    #     if sum(points_dict[payer]) < 0:
-    #         points_dict[payer] = 0
-    # return points_dict
-
 
 if __name__ == "__main__":
-    # DebugToolbarExtension(app)
-    # app.run(debug=True)
+    
     app.run(debug=True)
 
   
