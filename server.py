@@ -63,7 +63,11 @@ def homepage():
             negs.append((timestamp, points, payer))
             session["negs"] = negs
             #now the list of negative transations can be processed in the spend route against the postive transactions in ledger
+    print("************************************")
+
     print(session["ledger"])
+    print("************************************")
+
     print(session["negs"])
     return ("", 200, )
 
@@ -101,7 +105,7 @@ def add_transaction(payer = "", points = "", timestamp = ""):
 
 
 @app.route('/spend', methods=["GET"])
-def spend_points(cost):
+def spend_points():
     """
     Subtracts the point amount from the payer.
     Spend oldest (based on transaction timestamp) points first and return a list of 
@@ -113,14 +117,12 @@ def spend_points(cost):
     { "payer": "UNILEVER", "points": -200 },
     { "payer": "MILLER COORS", "points": -4,700 }
     ]"""
-    # print(session["ledger"])
-    # ledger = sorted(session["ledger"][:])
-  
+    
     negs = session["negs"]
     ledger = sorted(session["ledger"])
     spend = request.args
-    if not cost:
-        cost = spend
+    # if not cost:
+    #     cost = spend
     cost = int(spend.get("points", 0))
 
     for timestamp, points, payer in negs:
@@ -128,34 +130,70 @@ def spend_points(cost):
     
     #sum up all points for all payers
     spending_limit = 0
+    print("************************************")
+
     print(ledger)
+    print("************************************")
+
     print(negs)
+    print("************************************")
+
     for transaction in ledger:
         points = transaction[1]
         spending_limit += points
-    if cost <= spending_limit:
-        remaining_total = spending_limit
-        for timestamp, points, payer in ledger:
-            if remaining_total == 0:
-                break
-            else:
-                payer_cost = min(remaining_total, points)
-                remaining_total -= payer_cost
-                spend_points(payer_cost)
-                # add transaction that subtracts minimum of remaining total and points
-                # add_transaction(payer = payer, points = -payer_cost, timestamp = str(datetime.now()))
-                #but what we want to do is restart this spend loop, so i should call spend_points() on remaining payer cost?
-                
-                
-    else:
-        print("NO!")
-    #clear negs list after processing them all against the ledger
+    
+    #now my spending limit is the total of all pts in ledger
+    #i need to iterate through the ledger, subtracting points from my spending limit until the sl is 0
+    #and each time a transaction in ledger is zeroed out, erase it from the ledger
+    
+    #cost is what i'm supposed to spend total
+    for transaction in ledger:
+        if spending_limit == 0:
+            break
+        points = int(transaction[1])
+        if cost >= points:
+            ledger.remove(transaction)
+            cost -= points
+            spending_limit -= points
+        else:
+            #if what i'm subtracting is less than the oldest point amount, 
+            # i update that oldest point amount and break out of the loop
+            ledger.append((transaction[0], points-cost, transaction[2]))
+            ledger.remove(transaction)
+            break
+
     session["negs"] = []
-    print("aaaaaaaaaaaaaahahahahahah")
+    print("************************************")
     print(session["ledger"])
+    print("************************************")
+
     print(session["negs"])
 
     return("", 200)
+
+
+
+    # if cost <= spending_limit:
+    #     remaining_total = spending_limit
+    #     for timestamp, points, payer in ledger:
+    #         if remaining_total == 0:
+    #             break
+    #         else:
+    #             if payer_cost  remaining_total:
+    #                 #delete the item from ledger
+    #             payer_cost = min(remaining_total, points)
+    #             remaining_total -= payer_cost
+    #             # save payer and timestamp inside of list
+                
+    #             # add transaction that subtracts minimum of remaining total and points
+    #             add_transaction(payer = payer, points = -payer_cost, timestamp = str(datetime.now()))
+                
+                
+    # else:
+    #     print("NO!")
+    #clear negs list after processing them all against the ledger
+    
+
 
 @app.route('/balances', methods=["POST"])
 def all_balances():
@@ -165,6 +203,7 @@ def all_balances():
     "UNILEVER": 0,
     "MILLER COORS": 5300
     }"""
+    ledger = session["ledger"]
     balance = {}
     for timestamp, points, payer in ledger:
         balance[payer] = session.get(payer, [])
