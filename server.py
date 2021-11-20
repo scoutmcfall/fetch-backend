@@ -123,7 +123,7 @@ def spend_points():
         points = int(transaction[1])
         if cost >= points:
             ledger.remove(transaction)
-            spend_result.append(transaction[0], -cost, transaction[2])    
+            spend_result.append((transaction[0], -cost, transaction[2]))    
             cost -= points
             spending_limit -= points
         else:
@@ -131,7 +131,7 @@ def spend_points():
             # i update that oldest point amount and break out of the loop
             ledger.append((transaction[0], points-cost, transaction[2]))
             #i want to return a list of what was subtracted from each transaction
-            spend_result.append(transaction[0], cost, transaction[2])    
+            spend_result.append((transaction[0], cost, transaction[2]))    
             break
 
     #zero out negs once i've subtracted them all
@@ -141,8 +141,8 @@ def spend_points():
     print("************************************")
 
     print(session["negs"])
-    print spend_result
-    return(spend_result)
+    print(spend_result)
+    return("", 200)
 
 
 @app.route('/balances',  methods=["GET"])
