@@ -36,6 +36,25 @@ Suppose you call your add transaction route with the following sequence of calls
 ● { "payer": "DANNON", "points": -200, "timestamp": "2020-10-31T15:00:00Z" }
 ● { "payer": "MILLER COORS", "points": 10000, "timestamp": "2020-11-01T14:00:00Z" }
 ● { "payer": "DANNON", "points": 300, "timestamp": "2020-10-31T10:00:00Z" }
+
+dannon/300/10.31.10
+unilever/200/10.31.11 
+----------------------
+dannon/-200/10.31.15
+    now: dannon/100/10.31.10
+    unilever/200/10.31.11 
+----------------------  
+    miller/10000/11.01.14
+    dannon/1000/11.02.14
+----------------------  
+spend 5000
+    now: -100 = 4900
+        -200 = 4700
+        miller/5300/11.01.14
+        dannon/1000/11.02.14
+
+
+
 Then you call your spend points route with the following request:
 { "points": 5000 }
 The expected response from the spend call would be:
