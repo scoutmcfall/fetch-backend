@@ -18,18 +18,7 @@ app.jinja_env.undefined = StrictUndefined
 
 
 
-# payer a gives me 200 points
-# payer b gves me 300 points
-# payer a gives me 100 points
 
-# spend 300 points = 
-# -200 from a
-# -100 from b
-
-# when we 0 out a transaction in ledger, we should remove it from ledger
-
-# payer b = 200
-# payer a = 100
 
 
 """
@@ -52,20 +41,20 @@ def homepage():
     """prepopulate session with test data"""
     test_data = [{ "payer": "DANNON", "points": 1000, "timestamp": "2020-11-02T14:00:00Z" },
     { "payer": "UNILEVER", "points": 200, "timestamp": "2020-10-31T11:00:00Z" },
-    { "payer": "DANNON", "points": 200, "timestamp": "2020-10-31T15:00:00Z" }, #this was -200
+    { "payer": "DANNON", "points": -200, "timestamp": "2020-10-31T15:00:00Z" },
     { "payer": "MILLER COORS", "points": 10000, "timestamp": "2020-11-01T14:00:00Z" },
     { "payer": "DANNON", "points": 300, "timestamp": "2020-10-31T10:00:00Z" }]
 
 
     
     for transaction in test_data:
-        if transaction["points"] > 0
-            payer = transaction["payer"]
-            points = transaction["points"]#only put in positive points
-            timestamp = transaction["timestamp"]
-            payer_var = session.get(payer,[])
-            payer_var.append({"points": points, "timestamp" : timestamp})
-            session[payer] = payer_var
+        payer = transaction["payer"]
+        points = transaction["points"]
+        timestamp = transaction["timestamp"]
+        if transaction["points"] > 0:
+            # payer_var = session.get(payer,[])
+            # payer_var.append({"points": points, "timestamp" : timestamp})
+            # session[payer] = payer_var
             ledger = session.get("ledger", [])
             ledger.append((timestamp, points, payer))
             session["ledger"] = ledger
@@ -74,32 +63,45 @@ def homepage():
             negs.append((timestamp, points, payer))
             session["negs"] = negs
             #now the list of negative transations can be processed in the spend route against the postive transactions in ledger
-
+    print(session["ledger"])
+    print(session["negs"])
     return ("", 200, )
 
 @app.route('/transaction', methods=["GET"])
 def add_transaction(payer = "", points = "", timestamp = ""):
-    """Add transactions for a specific payer and date. Update session and global ledger."""
-    #getting a post request (from user or somewhere else)    
+    """Add positive or negative transactions to correct lists for 
+    a specific payer and date. Update session, global ledger, global negs."""
     transaction = request.args
-    # print(type(input_json))
     if not payer:
         payer = transaction["payer"]
     if not points:
         points = transaction["points"]
     if not timestamp:
         timestamp = transaction["timestamp"]
-    payer_var = session.get(payer,[])
-    payer_var.append((timestamp, points))
-    session[payer] = payer_var
+    if int(transaction["points"]) > 0:
+            payer = transaction["payer"]
+            points = transaction["points"]
+            timestamp = transaction["timestamp"]
+            ledger = session.get("ledger", [])
+            ledger.append((timestamp, points, payer))
+            # session["ledger"] = ledger
+    else:
+        negs = session.get("negs", [])
+        negs.append((timestamp, points, payer))
+        # session["negs"] = negs
+    
+   
+    # payer_var = session.get(payer,[])
+    # payer_var.append((timestamp, points))
+    # session[payer] = payer_var
 
-    session["ledger"].append((timestamp, points, payer))
+    # session["ledger"].append((timestamp, points, payer))
    
     return ("", 200)
 
 
 @app.route('/spend', methods=["GET"])
-def spend_points():
+def spend_points(cost):
     """
     Subtracts the point amount from the payer.
     Spend oldest (based on transaction timestamp) points first and return a list of 
@@ -111,16 +113,25 @@ def spend_points():
     { "payer": "UNILEVER", "points": -200 },
     { "payer": "MILLER COORS", "points": -4,700 }
     ]"""
-    print(session["ledger"])
-    ledger = sorted(session["ledger"][:])
-    
+    # print(session["ledger"])
+    # ledger = sorted(session["ledger"][:])
+  
+    negs = session["negs"]
+    ledger = sorted(session["ledger"])
     spend = request.args
+    if not cost:
+        cost = spend
     cost = int(spend.get("points", 0))
 
+    for timestamp, points, payer in negs:
+        cost += int(points) 
+    
     #sum up all points for all payers
     spending_limit = 0
-    
-    for timestamp, points, payer in ledger:
+    print(ledger)
+    print(negs)
+    for transaction in ledger:
+        points = transaction[1]
         spending_limit += points
     if cost <= spending_limit:
         remaining_total = spending_limit
@@ -130,14 +141,20 @@ def spend_points():
             else:
                 payer_cost = min(remaining_total, points)
                 remaining_total -= payer_cost
+                spend_points(payer_cost)
                 # add transaction that subtracts minimum of remaining total and points
-                add_transaction(payer = payer, points = -payer_cost, timestamp = str(datetime.now()))
+                # add_transaction(payer = payer, points = -payer_cost, timestamp = str(datetime.now()))
+                #but what we want to do is restart this spend loop, so i should call spend_points() on remaining payer cost?
                 
                 
     else:
         print("NO!")
+    #clear negs list after processing them all against the ledger
+    session["negs"] = []
     print("aaaaaaaaaaaaaahahahahahah")
     print(session["ledger"])
+    print(session["negs"])
+
     return("", 200)
 
 @app.route('/balances', methods=["POST"])
@@ -148,6 +165,13 @@ def all_balances():
     "UNILEVER": 0,
     "MILLER COORS": 5300
     }"""
+    balance = {}
+    for timestamp, points, payer in ledger:
+        balance[payer] = session.get(payer, [])
+    print(balance)
+
+
+    
     # points_dict = {}
     # for payer in session:
     #     points_dict[payer] = [session[payer]["points"]]
