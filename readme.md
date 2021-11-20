@@ -1,4 +1,4 @@
-##Greetings!
+Greetings!
 In order to run this program:
 1. create a virtual environment: virtualenv env
 2. activate the environment: source env/bin/activate
