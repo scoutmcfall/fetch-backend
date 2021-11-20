@@ -13,7 +13,7 @@ In order to run this program:
 Each transaction is read in individually and the list of positive transactions is stored in session as ledger.
 If it is positive, it's added to the end of ledger (a list of dictionaries).
 If it's negative, it's added to negs (list of dictionaries) which the spend route iterates through, 
-subtracting each from ledger and updating ledger each iteration .
+subtracting each from ledger and updating ledger each iteration.
 
 So, session consists of: {ledger: [], negs: [], balance:{}}
 
