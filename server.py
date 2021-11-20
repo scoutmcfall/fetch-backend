@@ -32,6 +32,20 @@ app.jinja_env.undefined = StrictUndefined
 # payer a = 100
 
 
+"""
+each transaction is read in individually and the list of positive transactions is stored in session as ledger
+if it is positive, it's added to the end of ledger (a list of dictionaries)
+if it's negative, it's added to negs (list of dictionaries) which the spend route iterates through, 
+subtracting each from ledger and updating ledger each iteration 
+
+so, session consists of: {ledger: [], negs: [], payer_totals:{}}
+
+in order to return the totals/payer, iterate through the updated ledger and populate a dictionary of {payer:points}
+using .get
+then return that dictionary
+"""
+
+
 
 @app.route('/')
 def homepage():
@@ -45,16 +59,21 @@ def homepage():
 
     
     for transaction in test_data:
-        payer = transaction["payer"]
-        points = transaction["points"]#only put in positive points
-        timestamp = transaction["timestamp"]
-        payer_var = session.get(payer,[])
-        payer_var.append({"points": points, "timestamp" : timestamp})
-        session[payer] = payer_var
-        ledger = session.get("ledger", [])
-        ledger.append((timestamp, points, payer))
-        session["ledger"] = ledger
-
+        if transaction["points"] > 0
+            payer = transaction["payer"]
+            points = transaction["points"]#only put in positive points
+            timestamp = transaction["timestamp"]
+            payer_var = session.get(payer,[])
+            payer_var.append({"points": points, "timestamp" : timestamp})
+            session[payer] = payer_var
+            ledger = session.get("ledger", [])
+            ledger.append((timestamp, points, payer))
+            session["ledger"] = ledger
+        else:
+            negs = session.get("negs", [])
+            negs.append((timestamp, points, payer))
+            session["negs"] = negs
+            #now the list of negative transations can be processed in the spend route against the postive transactions in ledger
 
     return ("", 200, )
 
